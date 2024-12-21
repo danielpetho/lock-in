@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { Toggle } from "@/components/ui/toggle";
 import { Pencil, Type, Download, RotateCcw } from "lucide-react";
-import html2canvas from "html2canvas";
+import html2canvas from "@jsplumb/html2canvas";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/get-media-query";
 
@@ -148,6 +148,42 @@ export default function RippedPaper({
         logging: false,
         imageTimeout: 0,
         useCORS: true,
+        onclone: (clonedDoc) => {
+          const textarea = clonedDoc.querySelector('textarea');
+          if (textarea) {
+            const div = clonedDoc.createElement('div');
+            div.innerHTML = textarea.value.split('\n').map(line => 
+              line || '&nbsp;'
+            ).join('<br>');
+            
+            div.style.cssText = `
+              width: 100%;
+              height: 100%;
+              background: transparent;
+              resize: none;
+              padding: ${textarea.style.padding};
+              margin: 0;
+              line-height: 1em;
+              font-size: inherit;
+              color: inherit;
+              overflow: hidden;
+            `;
+            div.className = textarea.className;
+            textarea.parentNode?.replaceChild(div, textarea);
+
+            // Ensure title positioning is preserved
+            const title = clonedDoc.querySelector('h1');
+            if (title) {
+              (title as HTMLElement).style.transform = 'translateX(0.75rem) translateY(-1rem)';
+            }
+
+            const containers = clonedDoc.querySelectorAll('.relative');
+            containers.forEach(container => {
+              (container as HTMLElement).style.margin = '0';
+              (container as HTMLElement).style.padding = '0';
+            });
+          }
+        }
       });
 
       // Show buttons again
@@ -164,9 +200,11 @@ export default function RippedPaper({
 
   return (
     <div 
-      ref={wrapperRef} 
-      className="relative w-screen h-screen flex items-center justify-center bg-black"
+      className=" w-screen h-screen flex items-center justify-center bg-black"
     >
+      <div ref={wrapperRef} 
+        className="relative max-w-[1920px] max-h-[1080px] w-full h-full flex items-center justify-center bg-black"
+        >
       <svg width="0" height="0">
         <filter
           id="paper-texture"
@@ -187,28 +225,7 @@ export default function RippedPaper({
           </feDiffuseLighting>
         </filter>
 
-        <filter
-          id="paper-distortion"
-          filterUnits="userSpaceOnUse"
-          x="0"
-          y="0"
-          width="100%"
-          height="100%"
-        >
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.001 0.001"
-            numOctaves="2"
-            result="noise"
-          />
-          <feDisplacementMap
-            in="SourceGraphic"
-            in2="noise"
-            scale="2"
-            xChannelSelector="R"
-            yChannelSelector="G"
-          />
-        </filter>
+        
       </svg>
       <div
         className="relative w-[8cm] h-[11cm] sm:w-[10cm] sm:h-[13cm] md:w-[14cm] md:h-[18cm]"
@@ -217,9 +234,9 @@ export default function RippedPaper({
         }}
       >
         <div
-          className="absolute top-0 left-0 w-full h-full z-0 bg-white p-0"
+          className="absolute top-0 left-0 w-full h-full z-0 bg-[#efefef] p-0"
           style={{
-            filter: "url(#paper-texture) ",
+             filter: "url(#paper-texture) ",
           }}
         />
         <div
@@ -264,29 +281,29 @@ export default function RippedPaper({
             )}
           </svg>
           <div
-            className={`p-3 md:p-6 absolute top-0 left-0 w-full h-full overflow-hidden ${
+            className={`absolute top-0 left-0 w-full h-full overflow-hidden ${
               isDrawMode ? "pointer-events-none" : "z-20"
             }`}
           >
-            <div className="relative">
-              <h1 className="text-5xl sm:text-6xl md:text-8xl">NY 2025</h1>
+            <div className="relative pt-3 md:pt-6 px-3 md:px-6">
+              <h1 className="text-5xl sm:text-6xl md:text-8xl leading-none">NY 2025</h1>
               <div className="">
                 <svg
-                  className="absolute -bottom-2 md:-bottom-4 left-0 w-full"
+                  className="absolute -bottom-2 md:-bottom-4 left-2 w-full"
                   height="20"
                   viewBox={mediaQuery === 'md' || mediaQuery === 'lg' ? "40 0 400 20" : "20 0 550 5"}
                 >
                   <path
                     d={UNDERLINE_PATH}
                     stroke="#2563eb"
-                    strokeWidth="2.5"
+                    strokeWidth={mediaQuery === 'md' || mediaQuery === 'lg' ? '3' : mediaQuery === 'sm' ? '2.5' : '2'}
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
                 </svg>
               </div>
-              </div>
+            </div>
             <textarea
               value={content}
               onChange={(e) => {
@@ -297,7 +314,7 @@ export default function RippedPaper({
                   onContentChange(lines.slice(0, 10).join("\n"));
                 }
               }}
-              className="w-full h-full bg-transparent focus:outline-none resize-none p-3 md:p-6 mt-4 overflow-hidden "
+              className="w-full h-full bg-transparent focus:outline-none resize-none px-6 md:px-12 pt-6 md:pt-8 overflow-hidden"
               maxLength={500}
               style={{
                 lineHeight: "1em",
@@ -347,7 +364,7 @@ export default function RippedPaper({
             <RotateCcw className="h-2 w-2 md:h-4 md:w-4 text-gray-400" />
           </Toggle>
         </div>
-
+        </div>
     </div>
   );
 }
