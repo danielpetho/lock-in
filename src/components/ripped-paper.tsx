@@ -44,8 +44,8 @@ export default function RippedPaper({
   const [currentPath, setCurrentPath] = useState<Point[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isDrawMode, setIsDrawMode] = useState(false);
-  const [rotation, setRotation] = useState(0)
-  const mediaQuery = useMediaQuery()
+  const [rotation, setRotation] = useState(0);
+  const mediaQuery = useMediaQuery();
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -127,9 +127,11 @@ export default function RippedPaper({
   const handleDownload = async () => {
     if (wrapperRef.current) {
       // Hide buttons temporarily
-      const buttonsDiv = document.querySelector('.control-buttons') as HTMLElement;
+      const buttonsDiv = document.querySelector(
+        ".control-buttons"
+      ) as HTMLElement;
       if (buttonsDiv) {
-        buttonsDiv.style.display = 'none';
+        buttonsDiv.style.display = "none";
       }
 
       // Calculate dimensions while maintaining aspect ratio
@@ -141,7 +143,7 @@ export default function RippedPaper({
       );
 
       const canvas = await html2canvas(wrapperRef.current, {
-        backgroundColor: '#000000',
+        backgroundColor: "#000000",
         scale: scale,
         width: Math.min(wrapperRef.current.offsetWidth, maxWidth),
         height: Math.min(wrapperRef.current.offsetHeight, maxHeight),
@@ -149,13 +151,14 @@ export default function RippedPaper({
         imageTimeout: 0,
         useCORS: true,
         onclone: (clonedDoc) => {
-          const textarea = clonedDoc.querySelector('textarea');
+          const textarea = clonedDoc.querySelector("textarea");
           if (textarea) {
-            const div = clonedDoc.createElement('div');
-            div.innerHTML = textarea.value.split('\n').map(line => 
-              line || '&nbsp;'
-            ).join('<br>');
-            
+            const div = clonedDoc.createElement("div");
+            div.innerHTML = textarea.value
+              .split("\n")
+              .map((line) => line || "&nbsp;")
+              .join("<br>");
+
             div.style.cssText = `
               width: 100%;
               height: 100%;
@@ -172,157 +175,140 @@ export default function RippedPaper({
             textarea.parentNode?.replaceChild(div, textarea);
 
             // Ensure title positioning is preserved
-            const title = clonedDoc.querySelector('h1');
+            const title = clonedDoc.querySelector("h1");
             if (title) {
-              (title as HTMLElement).style.transform = 'translateX(0.75rem) translateY(-1rem)';
+              (title as HTMLElement).style.transform =
+                "translateX(0.75rem) translateY(-1rem)";
             }
 
-            const containers = clonedDoc.querySelectorAll('.relative');
-            containers.forEach(container => {
-              (container as HTMLElement).style.margin = '0';
-              (container as HTMLElement).style.padding = '0';
+            const containers = clonedDoc.querySelectorAll(".relative");
+            containers.forEach((container) => {
+              (container as HTMLElement).style.margin = "0";
+              (container as HTMLElement).style.padding = "0";
             });
           }
-        }
+        },
       });
 
       // Show buttons again
       if (buttonsDiv) {
-        buttonsDiv.style.display = 'flex';
+        buttonsDiv.style.display = "flex";
       }
 
-      const link = document.createElement('a');
-      link.download = 'lockin2025.png';
-      link.href = canvas.toDataURL('image/png');
+      const link = document.createElement("a");
+      link.download = "lockin2025.png";
+      link.href = canvas.toDataURL("image/png");
       link.click();
     }
   };
 
   return (
-    <div 
-      className=" w-screen h-screen flex items-center justify-center bg-black"
-    >
-      <div ref={wrapperRef} 
-        className="relative max-w-[1920px] max-h-[1080px] w-full h-full flex items-center justify-center bg-black"
-        >
-      <svg width="0" height="0">
-        <filter
-          id="paper-texture"
-          filterUnits="userSpaceOnUse"
-          x="0"
-          y="0"
-          width="100%"
-          height="100%"
-        >
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.02"
-            numOctaves="5"
-            result="noise"
-          />
-          <feDiffuseLighting in="noise" lightingColor="#fff" surfaceScale="1">
-            <feDistantLight azimuth="45" elevation="60" />
-          </feDiffuseLighting>
-        </filter>
-
-        
-      </svg>
+    <div className=" w-screen h-screen flex items-center justify-center bg-black">
       <div
-        className="relative w-[8cm] h-[11cm] sm:w-[10cm] sm:h-[13cm] md:w-[14cm] md:h-[18cm]"
-        style={{
-          transform: `rotate(${rotation}deg)`,
-        }}
+        ref={wrapperRef}
+        className="relative max-w-[1920px] max-h-[1080px] w-full h-full flex items-center justify-center bg-black"
       >
         <div
-          className="absolute top-0 left-0 w-full h-full z-0 bg-[#efefef] p-0"
+          className="relative w-[8cm] h-[11cm] sm:w-[10cm] sm:h-[13cm] md:w-[14cm] md:h-[18cm] bg-[#efefef] "
           style={{
-             filter: "url(#paper-texture) ",
+            transform: `rotate(${rotation}deg)`,
           }}
-        />
-        <div
-          ref={contentRef}
-          className={cn(
-            "z-10 absolute top-0 left-0 w-full h-full p-0 text-3xl sm:text-4xl md:text-5xl  text-blue-600",
-            isDrawMode ? "cursor-crosshair" : "cursor-text"
-          )}
         >
-          <svg
-            ref={svgRef}
-            className="absolute top-0 left-0 w-full h-full z-20"
-            onPointerDown={startDrawing}
-            onPointerMove={draw}
-            onPointerUp={stopDrawing}
-            onPointerLeave={stopDrawing}
-            style={{
-              touchAction: "none",
-              userSelect: "none",
-            }}
-          >
-            {paths.map((path) => (
-              <path
-                key={path.id}
-                d={pointsToPath(path.points)}
-                stroke="#2563eb"
-                strokeWidth="2"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            ))}
-            {currentPath.length > 0 && (
-              <path
-                d={pointsToPath(currentPath)}
-                stroke="#2563eb"
-                strokeWidth="2"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            )}
-          </svg>
           <div
-            className={`absolute top-0 left-0 w-full h-full overflow-hidden ${
-              isDrawMode ? "pointer-events-none" : "z-20"
-            }`}
+            ref={contentRef}
+            className={cn(
+              "z-10 absolute top-0 left-0 w-full h-full p-0 text-3xl sm:text-4xl md:text-5xl  text-blue-600",
+              isDrawMode ? "cursor-crosshair" : "cursor-text"
+            )}
           >
-            <div className="relative pt-3 md:pt-6 px-3 md:px-6">
-              <h1 className="text-5xl sm:text-6xl md:text-8xl leading-none">NY 2025</h1>
-              <div className="">
-                <svg
-                  className="absolute -bottom-2 md:-bottom-4 left-2 w-full"
-                  height="20"
-                  viewBox={mediaQuery === 'md' || mediaQuery === 'lg' ? "40 0 400 20" : "20 0 550 5"}
-                >
-                  <path
-                    d={UNDERLINE_PATH}
-                    stroke="#2563eb"
-                    strokeWidth={mediaQuery === 'md' || mediaQuery === 'lg' ? '3' : mediaQuery === 'sm' ? '2.5' : '2'}
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-            </div>
-            <textarea
-              value={content}
-              onChange={(e) => {
-                const lines = e.target.value.split("\n");
-                if (lines.length <= 10) {
-                  onContentChange(e.target.value);
-                } else {
-                  onContentChange(lines.slice(0, 10).join("\n"));
-                }
-              }}
-              className="w-full h-full bg-transparent focus:outline-none resize-none px-6 md:px-12 pt-6 md:pt-8 overflow-hidden"
-              maxLength={500}
+            <svg
+              ref={svgRef}
+              className="absolute top-0 left-0 w-full h-full z-20"
+              onPointerDown={startDrawing}
+              onPointerMove={draw}
+              onPointerUp={stopDrawing}
+              onPointerLeave={stopDrawing}
               style={{
-                lineHeight: "1em",
+                touchAction: "none",
+                userSelect: "none",
               }}
-            />
+            >
+              {paths.map((path) => (
+                <path
+                  key={path.id}
+                  d={pointsToPath(path.points)}
+                  stroke="#2563eb"
+                  strokeWidth="2"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              ))}
+              {currentPath.length > 0 && (
+                <path
+                  d={pointsToPath(currentPath)}
+                  stroke="#2563eb"
+                  strokeWidth="2"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
+            </svg>
+            <div
+              className={`absolute top-0 left-0 w-full h-full overflow-hidden ${
+                isDrawMode ? "pointer-events-none" : "z-20"
+              }`}
+            >
+              <div className="relative pt-3 md:pt-6 px-3 md:px-6">
+                <h1 className="text-5xl sm:text-6xl md:text-8xl leading-none">
+                  NY 2025
+                </h1>
+                <div className="">
+                  <svg
+                    className="absolute -bottom-2 md:-bottom-4 left-2 w-full"
+                    height="20"
+                    viewBox={
+                      mediaQuery === "md" || mediaQuery === "lg"
+                        ? "40 0 400 20"
+                        : "20 0 550 5"
+                    }
+                  >
+                    <path
+                      d={UNDERLINE_PATH}
+                      stroke="#2563eb"
+                      strokeWidth={
+                        mediaQuery === "md" || mediaQuery === "lg"
+                          ? "3"
+                          : mediaQuery === "sm"
+                          ? "2.5"
+                          : "2"
+                      }
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <textarea
+                value={content}
+                onChange={(e) => {
+                  const lines = e.target.value.split("\n");
+                  if (lines.length <= 10) {
+                    onContentChange(e.target.value);
+                  } else {
+                    onContentChange(lines.slice(0, 10).join("\n"));
+                  }
+                }}
+                className="w-full h-full bg-transparent focus:outline-none resize-none px-6 md:px-12 pt-6 md:pt-8 overflow-hidden"
+                maxLength={500}
+                style={{
+                  lineHeight: "1em",
+                }}
+              />
+            </div>
           </div>
-        </div>
-       
         </div>
         <div className="absolute top-6 -translate-x-1/2 left-1/2 flex gap-0 mx-0 md:gap-2 z-30 control-buttons">
           <Toggle
@@ -364,7 +350,7 @@ export default function RippedPaper({
             <RotateCcw className="h-2 w-2 md:h-4 md:w-4 text-gray-400" />
           </Toggle>
         </div>
-        </div>
+      </div>
     </div>
   );
 }
