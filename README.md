@@ -4,7 +4,7 @@ A minimalist web app for creating handwritten-style notes with a ripped paper ae
 
 ![Lock In 2025 Preview](./public/og.jpg)
 
-Try it live at [lockin.danielpetho.com](https://lockin.danielpetho.com)
+Try it live at [lockin.danielpetho.com](https://lock-in.danielpetho.com)
 
 ## Notes
 
